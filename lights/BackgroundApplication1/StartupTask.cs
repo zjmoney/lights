@@ -13,6 +13,7 @@ namespace CoolLights
     {
         public void Run(IBackgroundTaskInstance taskInstance)
         {
+            BackgroundTaskDeferral Deferral = taskInstance.GetDeferral();
             // 
             // TODO: Insert code to start one or more asynchronous methods 
             //
