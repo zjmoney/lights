@@ -39,7 +39,7 @@ namespace CoolLights
         private const int NUMBER_OF_PIXELS = 30;
         private const int BAUD_RATE = 115200;
 
-        private string SelectedItem = "USB";//{ get; private set; }
+       //private string SelectedItem = "USB";//{ get; private set; }
 
         // Audio Stuff
         private AudioGraph graph;
