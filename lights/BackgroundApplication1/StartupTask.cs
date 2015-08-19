@@ -47,7 +47,7 @@ namespace CoolLights
             
         }
 
-        public async static Task<double[]> Prepare(double[] wave)  // assume 16 bit for now 
+        public static double[] Prepare([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] double[] wave)  // assume 16 bit for now 
         {
             // Find length that is closest power of 2
             int length = wave.Length;
@@ -64,10 +64,10 @@ namespace CoolLights
             return data;
         }
 
-        public static async Task ControlLightStrip(double[] wave)
+        public void ControlLightStrip([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] double[] wave)
         {
             var fft = new FFTFunctions();
-            double[] data = await Prepare(wave);
+            double[] data = Prepare(wave);
 
 
             fft.RealFFT(data, true);
