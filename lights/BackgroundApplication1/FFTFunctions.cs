@@ -4,17 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace wra_neopixel_control
+namespace CoolLights
 {
-    /// <summary>                                                                                                
-    /// Represent a class that performs real or complex valued Fast Fourier                                      
-    /// Transforms. Instantiate it and use the FFT or TableFFT methods to                                        
-    /// compute complex to complex FFTs. Use FFTReal for real to complex                                         
-    /// FFTs which are much faster than standard complex to complex FFTs.                                        
-    /// Properties A and B allow selecting various FFT sign and scaling                                          
-    /// conventions.                                                                                             
-    /// </summary>                                                                                               
-    public class FFTFunctions
+    class FFTFunctions
     {
         /// <summary>                                                                                            
         /// Compute the forward or inverse Fourier Transform of data, with                                       
