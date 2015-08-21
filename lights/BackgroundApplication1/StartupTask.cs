@@ -73,6 +73,7 @@ namespace CoolLights
 
         public void Run(IBackgroundTaskInstance taskInstance)
         {
+            System.Diagnostics.Debug.WriteLine("hola");
             playing = false;
             DeviceInformation device = null;
 
