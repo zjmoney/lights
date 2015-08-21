@@ -192,7 +192,7 @@ namespace CoolLights
             return data;
         }
 
-        public void ControlLightStrip([System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] double[] wave)
+        public void ControlLightStrip([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] double[] wave)
         {
             var fft = new FFTFunctions();
             double[] data = Prepare(wave);
