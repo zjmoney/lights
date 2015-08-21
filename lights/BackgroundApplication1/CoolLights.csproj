@@ -7,8 +7,8 @@
     <ProjectGuid>{61EF70DE-0E48-4DE0-8E57-7ACAF088C2BE}</ProjectGuid>
     <OutputType>winmdobj</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>BackgroundApplication1</RootNamespace>
-    <AssemblyName>BackgroundApplication1</AssemblyName>
+    <RootNamespace>CoolLights</RootNamespace>
+    <AssemblyName>CoolLights</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
     <TargetPlatformVersion>10.0.10240.0</TargetPlatformVersion>
@@ -78,6 +78,7 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>true</Prefer32Bit>
+    <UseDotNetNativeToolchain>false</UseDotNetNativeToolchain>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>bin\x86\Release\</OutputPath>
@@ -96,6 +97,7 @@
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FFTFunctions.cs" />
     <Compile Include="StartupTask.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -103,9 +105,9 @@
     <AppxManifest Include="Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
-    <None Include="BackgroundApplication1_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="audio.mp3" />
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -114,6 +116,17 @@
     <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
     <Content Include="Assets\StoreLogo.png" />
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Maker.Firmata">
+      <HintPath>..\..\SuiteLights\MicrosoftMakerAssemblies\Microsoft.Maker.Firmata\Microsoft.Maker.Firmata.winmd</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Maker.RemoteWiring">
+      <HintPath>..\..\SuiteLights\MicrosoftMakerAssemblies\Microsoft.Maker.RemoteWiring\Microsoft.Maker.RemoteWiring.winmd</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Maker.Serial">
+      <HintPath>..\..\SuiteLights\MicrosoftMakerAssemblies\Microsoft.Maker.Firmata\Microsoft.Maker.Serial.winmd</HintPath>
+    </Reference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
