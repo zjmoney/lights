@@ -201,7 +201,10 @@ namespace SuiteLights
 
             using (var dataReader = new Windows.Storage.Streams.DataReader(stream))
             {
-                dataReader.LoadAsync((uint)stream.Size).GetResults();
+                var resultsOfLoad = dataReader.LoadAsync((uint)stream.Size).GetResults();
+
+                var buff = dataReader.ReadBuffer(1);
+
                 while (dataReader.UnconsumedBufferLength > 0)
                     //while(true)
                 {
