@@ -100,12 +100,14 @@ namespace SuiteLights
             Arduino = new RemoteDevice(Firmata);
             Connection.ConnectionEstablished += OnConnectionEstablished;
 
-            Connection.begin(BAUD_RATE, SerialConfig.SERIAL_8N1);
+
             
+            Connection.begin(BAUD_RATE, SerialConfig.SERIAL_8N1);
+
             // TODO: Need to wait until connection is established before caling OnConnectionEstablished()
             // This fixes the sysex exception.
 
-            this.OnConnectionEstablished();
+            while (true) { };
         }
 
         private void OnConnectionEstablished()
