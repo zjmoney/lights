@@ -115,11 +115,9 @@ namespace SuiteLights
 
             
             Connection.begin(BAUD_RATE, SerialConfig.SERIAL_8N1);
+            
 
-            // TODO: Need to wait until connection is established before caling OnConnectionEstablished()
-            // This fixes the sysex exception.
-
-
+            // TODO: ATTEMPTING TO READ FROM MICROPHONE
             /////////////////////////////////////////////////////////////////////////////////////
 
             var media = new MediaCapture();
@@ -138,6 +136,7 @@ namespace SuiteLights
             ////////////////////////////////////////////////////////////////////////////
 
 
+            // Dont delete these commented out part yet
 
 
             ////Read system's raw audio stream support
