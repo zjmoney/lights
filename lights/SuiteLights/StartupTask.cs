@@ -8,6 +8,16 @@ using Microsoft.Maker.Firmata;
 using Microsoft.Maker.RemoteWiring;
 using Microsoft.Maker.Serial;
 using System.Threading.Tasks;
+using Windows.Media.SpeechRecognition;
+using System.Diagnostics;
+using Windows.Media.Devices;
+using Windows.Media.Capture;
+using Windows.ApplicationModel; 
+using Windows.Devices.Gpio; 
+using Windows.Media.SpeechSynthesis; 
+using Windows.Storage; 
+using Windows.UI.Core; 
+using Windows.UI.Xaml.Controls;
 using System.IO;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
@@ -17,15 +27,14 @@ using Windows.Foundation.Collections;
 using Windows.Media.Audio;
 using Windows.Media.Effects;
 using Windows.Media.Render;
-using Windows.Storage;
 using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using System.ComponentModel;
+using Windows.Media.MediaProperties;
 using static System.Diagnostics.Debug;
 
 // The Background Application template is documented at http://go.microsoft.com/fwlink/?LinkID=533884&clcid=0x409
@@ -52,6 +61,7 @@ namespace SuiteLights
         double maxLowVolume = 1;
         double maxHighVolume = 1;
         Random rand = new Random();
+        
 
         public static UsbSerial Connection
         {
@@ -70,6 +80,8 @@ namespace SuiteLights
             get;
             set;
         }
+        
+
         public void Run(IBackgroundTaskInstance taskInstance)
         {
             System.Diagnostics.Debug.WriteLine("hi");
@@ -107,13 +119,117 @@ namespace SuiteLights
             // TODO: Need to wait until connection is established before caling OnConnectionEstablished()
             // This fixes the sysex exception.
 
-            while (true) { };
+
+            /////////////////////////////////////////////////////////////////////////////////////
+
+            var media = new MediaCapture();
+            var captureInitSettings = new MediaCaptureInitializationSettings();
+            captureInitSettings.StreamingCaptureMode = StreamingCaptureMode.Audio;
+            media.InitializeAsync(captureInitSettings).GetResults();
+            media.Failed += (_, ex) => WriteLine(ex.Message);
+
+           // Windows.Storage.Streams.IRandomAccessStream rstream = new Windows.Storage.Streams.InMemoryRandomAccessStream()
+
+            var stream = new Windows.Storage.Streams.InMemoryRandomAccessStream(); // custom stream implementation
+            media.StartRecordToStreamAsync(MediaEncodingProfile.CreateWav(AudioEncodingQuality.Low), stream).GetResults();
+            //stream.AmplitudeReading += AmplitudeReading; // get an amplitude event
+
+
+            ////////////////////////////////////////////////////////////////////////////
+
+
+
+
+            ////Read system's raw audio stream support
+            //String[] propertiesToRetrieve = { "System.Devices.AudioDevice.RawProcessingSupported" };
+            //try
+            //{
+            //    var mediaDevice = DeviceInformation.CreateFromIdAsync(MediaDevice.GetDefaultAudioCaptureId(AudioDeviceRole.Communications), propertiesToRetrieve).AsTask<DeviceInformation>().Result;
+
+            //    var m_bRawAudioSupported = mediaDevice.Properties["System.Devices.AudioDevice.RawProcessingSupported"].Equals(true);
+            //    if (m_bRawAudioSupported)
+            //    {
+            //        WriteLine("Raw audio recording is supported");
+            //    }
+            //    else
+            //    {
+            //        WriteLine("Raw audio recording is not supported");
+            //    }
+
+            //    var mediaDevice2 = new Windows.Media.Capture.MediaCapture();
+            //    var settings = new Windows.Media.Capture.MediaCaptureInitializationSettings();
+            //    settings.StreamingCaptureMode = Windows.Media.Capture.StreamingCaptureMode.Audio;
+            //    settings.MediaCategory = Windows.Media.Capture.MediaCategory.Other;
+            //    settings.AudioProcessing = (m_bRawAudioSupported) ? Windows.Media.AudioProcessing.Default : Windows.Media.AudioProcessing.Default;
+            //    settings.AudioDeviceId = MediaDevice.GetDefaultAudioCaptureId(AudioDeviceRole.Communications);
+
+
+
+            //    mediaDevice2.InitializeAsync(settings).AsTask().Wait();
+
+
+            //    WriteLine("Device initialized successfully");
+            //    //m_mediaCaptureMgr.RecordLimitationExceeded += new Windows.Media.Capture.RecordLimitationExceededEventHandler(RecordLimitationExceeded); ;
+            //    //m_mediaCaptureMgr.Failed += new Windows.Media.Capture.MediaCaptureFailedEventHandler(Failed); ;
+
+            //    var profile = new Windows.Media.MediaProperties.MediaEncodingProfile();
+            //    //mediaDevice2.StartRecordToStreamAsync(profile,)
+
+
+            //    using (Windows.Storage.Streams.IRandomAccessStream rstream = new Windows.Storage.Streams.InMemoryRandomAccessStream())
+            //    {
+            //        mediaDevice2.StartRecordToStreamAsync(Windows.Media.MediaProperties.MediaEncodingProfile.CreateWma(Windows.Media.MediaProperties.AudioEncodingQuality.High), rstream).AsTask().Wait();
+            //        using (var inputStream = rstream.GetInputStreamAt(0))
+            //        {
+            //            using (var dataReader = new Windows.Storage.Streams.DataReader(inputStream))
+            //            {
+            //                dataReader.LoadAsync((uint)rstream.Size).GetResults();
+            //                while (dataReader.UnconsumedBufferLength > 0)
+            //                {
+            //                    uint bytesToRead = dataReader.ReadUInt32();
+            //                    WriteLine(bytesToRead.ToString());
+            //                }
+            //            }
+
+            //        }
+            //    }
+            //}
+            //catch (Exception e)
+            //{
+            //    WriteLine(e);
+            //}
+
+            using (var dataReader = new Windows.Storage.Streams.DataReader(stream))
+            {
+                dataReader.LoadAsync((uint)stream.Size).GetResults();
+                while (dataReader.UnconsumedBufferLength > 0)
+                    //while(true)
+                {
+                    uint bytesToRead = dataReader.ReadUInt32();
+                    WriteLine(bytesToRead.ToString());
+                }
+            }
+
+
+
+            while (true) {
+                
+            };
+        }
+
+        private void AmplitudeReading(object sender, double reading)
+        {
+            WriteLine("AMPLITUDEREADING" + reading);
         }
 
         private void OnConnectionEstablished()
         {
             System.Diagnostics.Debug.WriteLine("connection esablished");
+            while(true) { }
+            // Sets to red
             SetAllPixelsAndUpdate(255, 0, 0);
+            
+
 
             // OnNavigatedTo goes here
 
@@ -132,14 +248,17 @@ namespace SuiteLights
 
             TogglePlay();
         }
+        
+        
 
-        /// <summary>
-        /// Sets all the pixels to the given color values and calls UpdateStrip() to tell the NeoPixel library to show the set colors.
-        /// </summary>
-        /// <param name="red"></param>
-        /// <param name="green"></param>
-        /// <param name="blue"></param>
-        private void SetAllPixelsAndUpdate(byte red, byte green, byte blue)
+
+    /// <summary>
+    /// Sets all the pixels to the given color values and calls UpdateStrip() to tell the NeoPixel library to show the set colors.
+    /// </summary>
+    /// <param name="red"></param>
+    /// <param name="green"></param>
+    /// <param name="blue"></param>
+    private void SetAllPixelsAndUpdate(byte red, byte green, byte blue)
         {
             SetAllPixels(red, green, blue);
             UpdateStrip();
