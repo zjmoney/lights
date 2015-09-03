@@ -12,11 +12,11 @@ using Windows.Media.SpeechRecognition;
 using System.Diagnostics;
 using Windows.Media.Devices;
 using Windows.Media.Capture;
-using Windows.ApplicationModel; 
-using Windows.Devices.Gpio; 
-using Windows.Media.SpeechSynthesis; 
-using Windows.Storage; 
-using Windows.UI.Core; 
+using Windows.ApplicationModel;
+using Windows.Devices.Gpio;
+using Windows.Media.SpeechSynthesis;
+using Windows.Storage;
+using Windows.UI.Core;
 using Windows.UI.Xaml.Controls;
 using System.IO;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -36,6 +36,7 @@ using Windows.UI.Xaml.Navigation;
 using System.ComponentModel;
 using Windows.Media.MediaProperties;
 using static System.Diagnostics.Debug;
+using Windows.Storage.Streams;
 
 // The Background Application template is documented at http://go.microsoft.com/fwlink/?LinkID=533884&clcid=0x409
 
@@ -80,7 +81,8 @@ namespace SuiteLights
             get;
             set;
         }
-        
+
+        public byte[] RiffHeader { get; set; }
 
         public void Run(IBackgroundTaskInstance taskInstance)
         {
@@ -115,125 +117,99 @@ namespace SuiteLights
 
             
             Connection.begin(BAUD_RATE, SerialConfig.SERIAL_8N1);
-            
 
-            // TODO: ATTEMPTING TO READ FROM MICROPHONE
-            /////////////////////////////////////////////////////////////////////////////////////
 
-            var media = new MediaCapture();
+            // Begin Recording from mic.
+            this.StartRecording();
 
             
-            var captureInitSettings = new MediaCaptureInitializationSettings();
-            captureInitSettings.StreamingCaptureMode = StreamingCaptureMode.Audio;
-            media.InitializeAsync(captureInitSettings).GetResults();
-            media.Failed += (_, ex) => WriteLine(ex.Message);
-
-           // Windows.Storage.Streams.IRandomAccessStream rstream = new Windows.Storage.Streams.InMemoryRandomAccessStream()
-
-            var stream = new Windows.Storage.Streams.InMemoryRandomAccessStream(); // custom stream implementation
-            media.StartRecordToStreamAsync(MediaEncodingProfile.CreateWav(AudioEncodingQuality.Low), stream).GetResults();
-            //stream.AmplitudeReading += AmplitudeReading; // get an amplitude event
-
-
-            ////////////////////////////////////////////////////////////////////////////
-
-
-            // Dont delete these commented out part yet
-
-
-            ////Read system's raw audio stream support
-            //String[] propertiesToRetrieve = { "System.Devices.AudioDevice.RawProcessingSupported" };
-            //try
-            //{
-            //    var mediaDevice = DeviceInformation.CreateFromIdAsync(MediaDevice.GetDefaultAudioCaptureId(AudioDeviceRole.Communications), propertiesToRetrieve).AsTask<DeviceInformation>().Result;
-
-            //    var m_bRawAudioSupported = mediaDevice.Properties["System.Devices.AudioDevice.RawProcessingSupported"].Equals(true);
-            //    if (m_bRawAudioSupported)
-            //    {
-            //        WriteLine("Raw audio recording is supported");
-            //    }
-            //    else
-            //    {
-            //        WriteLine("Raw audio recording is not supported");
-            //    }
-
-            //    var mediaDevice2 = new Windows.Media.Capture.MediaCapture();
-            //    var settings = new Windows.Media.Capture.MediaCaptureInitializationSettings();
-            //    settings.StreamingCaptureMode = Windows.Media.Capture.StreamingCaptureMode.Audio;
-            //    settings.MediaCategory = Windows.Media.Capture.MediaCategory.Other;
-            //    settings.AudioProcessing = (m_bRawAudioSupported) ? Windows.Media.AudioProcessing.Default : Windows.Media.AudioProcessing.Default;
-            //    settings.AudioDeviceId = MediaDevice.GetDefaultAudioCaptureId(AudioDeviceRole.Communications);
-
-
-
-            //    mediaDevice2.InitializeAsync(settings).AsTask().Wait();
-
-
-            //    WriteLine("Device initialized successfully");
-            //    //m_mediaCaptureMgr.RecordLimitationExceeded += new Windows.Media.Capture.RecordLimitationExceededEventHandler(RecordLimitationExceeded); ;
-            //    //m_mediaCaptureMgr.Failed += new Windows.Media.Capture.MediaCaptureFailedEventHandler(Failed); ;
-
-            //    var profile = new Windows.Media.MediaProperties.MediaEncodingProfile();
-            //    //mediaDevice2.StartRecordToStreamAsync(profile,)
-
-
-            //    using (Windows.Storage.Streams.IRandomAccessStream rstream = new Windows.Storage.Streams.InMemoryRandomAccessStream())
-            //    {
-            //        mediaDevice2.StartRecordToStreamAsync(Windows.Media.MediaProperties.MediaEncodingProfile.CreateWma(Windows.Media.MediaProperties.AudioEncodingQuality.High), rstream).AsTask().Wait();
-            //        using (var inputStream = rstream.GetInputStreamAt(0))
-            //        {
-            //            using (var dataReader = new Windows.Storage.Streams.DataReader(inputStream))
-            //            {
-            //                dataReader.LoadAsync((uint)rstream.Size).GetResults();
-            //                while (dataReader.UnconsumedBufferLength > 0)
-            //                {
-            //                    uint bytesToRead = dataReader.ReadUInt32();
-            //                    WriteLine(bytesToRead.ToString());
-            //                }
-            //            }
-
-            //        }
-            //    }
-            //}
-            //catch (Exception e)
-            //{
-            //    WriteLine(e);
-            //}
-
-            using (var dataReader = new Windows.Storage.Streams.DataReader(stream))
+        }
+        
+        public void StartRecording()
+        {
+            for(int i = 0; i < 50; i++ )
             {
-                var resultsOfLoad = dataReader.LoadAsync((uint)stream.Size).GetResults();
+                this.PrintMicrophoneSample();
+            }
+        }
 
-                var uncon = dataReader.UnconsumedBufferLength;
+        public void PrintMicrophoneSample()
+        {
+            MediaCapture capture;
+            IRandomAccessStream stream;
+            const int BufferSize = 64000;
+            bool recording;
+            float volume = 100;
 
 
-                for(int i = 0; i < 1000; i++)
-                {
-                    WriteLine(dataReader.UnconsumedBufferLength);
-                }
 
-                
+            capture = new MediaCapture();
 
-                if (dataReader.UnconsumedBufferLength > 0)
-                {
-                    WriteLine("unconsumed");
-                }
-                var buff = dataReader.ReadBuffer(1);
+            stream = new InMemoryRandomAccessStream();
+            var captureInitSettings2 = new MediaCaptureInitializationSettings();
+            captureInitSettings2.StreamingCaptureMode = StreamingCaptureMode.Audio;
+            capture.InitializeAsync(captureInitSettings2).AsTask().Wait();
 
-                while (dataReader.UnconsumedBufferLength > 0)
-                    //while(true)
-                {
-                    uint bytesToRead = dataReader.ReadUInt32();
-                    WriteLine(bytesToRead.ToString());
-                }
+            capture.AudioDeviceController.VolumePercent = volume;
+
+            MediaEncodingProfile profile = new MediaEncodingProfile();
+
+            AudioEncodingProperties audioProperties = AudioEncodingProperties.CreatePcm(16000, 1, 16);
+            profile.Audio = audioProperties;
+            profile.Video = null;
+            profile.Container = new ContainerEncodingProperties() { Subtype = MediaEncodingSubtypes.Wave };
+
+            capture.StartRecordToStreamAsync(profile, stream).GetResults();
+
+            recording = true;
+
+            // waste time
+            for (int i = 0; i < 5; i++)
+            {
+                i = i * 232323 + 89;// WriteLine(i);
             }
 
+            capture.StopRecordAsync().GetResults();
 
+            byte[] wav = new byte[stream.Size];
+            stream.Seek(0);
+            stream.ReadAsync(wav.AsBuffer(), (uint)stream.Size, InputStreamOptions.None).GetResults();
 
-            while (true) {
-                
-            };
+            int sum = 0;
+            for(int i = 0; i < wav.Count(); i++)
+            {
+                sum += (int) wav[i];
+            }
+            WriteLine((double) wav.Count() / sum);
         }
+
+        public void SelectWave([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] byte[] wav)
+        {
+            // trim off the wav header
+
+            // Get past all the other sub chunks to get to the data subchunk:
+            int pos = 12;   // First Subchunk ID from 12 to 16
+
+            // Keep iterating until we find the data chunk (i.e. 64 61 74 61 ...... (i.e. 100 97 116 97 in decimal))
+            while (!(wav[pos] == 100 && wav[pos + 1] == 97 && wav[pos + 2] == 116 && wav[pos + 3] == 97))
+            {
+                pos += 4;
+                int chunkSize = wav[pos] + wav[pos + 1] * 256 + wav[pos + 2] * 65536 + wav[pos + 3] * 16777216;
+                pos += 4 + chunkSize;
+            }
+            pos += 8;
+
+            RiffHeader = new byte[pos];
+            Array.Copy(wav, 0, RiffHeader, 0, pos);
+
+            int len = wav.Length - pos;
+            byte[] data = new byte[len];
+            Array.Copy(wav, pos, data, 0, len);
+
+            WriteLine("GOTIt: " + data.ToString());
+
+        }
+
 
         private void AmplitudeReading(object sender, double reading)
         {

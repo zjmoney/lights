@@ -1,140 +1,139 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Text;
-using System.Threading.Tasks;
-using Windows.Media.Capture;
-using Windows.Media.Core;
-using Windows.Media.MediaProperties;
-using Windows.Storage;
-using Windows.Storage.Streams;
-using Windows.Foundation;
+﻿//using System;
+//using System.Collections.Generic;
+//using System.Diagnostics;
+//using System.IO;
+//using System.Linq;
+//using System.Runtime.InteropServices.WindowsRuntime;
+//using System.Text;
+//using System.Threading.Tasks;
+//using Windows.Media.Capture;
+//using Windows.Media.Core;
+//using Windows.Media.MediaProperties;
+//using Windows.Storage;
+//using Windows.Storage.Streams;
+//using Windows.Foundation;
 
-namespace SuiteLights
-{
+//namespace SuiteLights
+//{
+    
+//    /// <summary>
+//    /// This is a temporary hack to allow us to test voice recording through to Halsey 
+//    /// </summary>
+//    public class Recorder
+//    {
+//        MediaCapture capture;
+//        IRandomAccessStream stream;
+//        const int BufferSize = 64000;
+//        bool recording;
+//        float volume = 100;
 
+//        public Recorder()
+//        {
+//        }
 
-    /// <summary>
-    /// This is a temporary hack to allow us to test voice recording through to Halsey 
-    /// </summary>
-    public class Recorder
-    {
-        MediaCapture capture;
-        IRandomAccessStream stream;
-        const int BufferSize = 64000;
-        bool recording;
-        float volume = 100;
-
-        public Recorder()
-        {
-        }
-
-        public bool IsRecording { get { return recording; } }
-
-
-        public float VolumePercent
-        {
-            get { return volume; }
-            set { volume = value; }
-        }
+//        public bool IsRecording { get { return recording; } }
 
 
-        /// <summary>
-        /// This event is raised when recording has started.
-        /// </summary>
-        public event EventHandler RecordingStarted;
+//        public float VolumePercent
+//        {
+//            get { return volume; }
+//            set { volume = value; }
+//        }
 
-        public async Task StartRecordingAsync()
-        {
-            capture = new MediaCapture();
 
-            stream = new InMemoryRandomAccessStream();
+//        /// <summary>
+//        /// This event is raised when recording has started.
+//        /// </summary>
+//        public event EventHandler RecordingStarted;
 
-            capture.InitializeAsync().AsTask().Wait();
+//        public async Task StartRecordingAsync()
+//        {
+//            capture = new MediaCapture();
 
-            capture.AudioDeviceController.VolumePercent = volume;
+//            stream = new InMemoryRandomAccessStream();
 
-            MediaEncodingProfile profile = new MediaEncodingProfile();
+//            capture.InitializeAsync().AsTask().Wait();
 
-            AudioEncodingProperties audioProperties = AudioEncodingProperties.CreatePcm(16000, 1, 16);
-            profile.Audio = audioProperties;
-            profile.Video = null;
-            profile.Container = new ContainerEncodingProperties() { Subtype = MediaEncodingSubtypes.Wave };
+//            capture.AudioDeviceController.VolumePercent = volume;
 
-            await capture.StartRecordToStreamAsync(profile, stream);
+//            MediaEncodingProfile profile = new MediaEncodingProfile();
 
-            recording = true;
+//            AudioEncodingProperties audioProperties = AudioEncodingProperties.CreatePcm(16000, 1, 16);
+//            profile.Audio = audioProperties;
+//            profile.Video = null;
+//            profile.Container = new ContainerEncodingProperties() { Subtype = MediaEncodingSubtypes.Wave };
 
-            if (RecordingStarted != null)
-            {
-                RecordingStarted(this, EventArgs.Empty);
-            }
-        }
+//            await capture.StartRecordToStreamAsync(profile, stream);
 
-        /// <summary>
-        /// This event is raised when a recording is available for processing.
-        /// todo: move this to stream based.
-        /// </summary>
-        public event EventHandler<byte[]> RecordingAvailable;
+//            recording = true;
 
-        /// <summary>
-        /// Stop recording and return the audio encoded bytes.
-        /// </summary>
-        /// <returns></returns>
-        public async Task StopRecordingAsync()
-        {
-            if (recording)
-            {
-                await capture.StopRecordAsync();
-                recording = false;
-            }
-            else
-            {
-                return;
-            }
+//            if (RecordingStarted != null)
+//            {
+//                RecordingStarted(this, EventArgs.Empty);
+//            }
+//        }
 
-            byte[] wav = new byte[stream.Size];
-            stream.Seek(0);
-            await stream.ReadAsync(wav.AsBuffer(), (uint)stream.Size, InputStreamOptions.None);
+//        /// <summary>
+//        /// This event is raised when a recording is available for processing.
+//        /// todo: move this to stream based.
+//        /// </summary>
+//        public event EventHandler<byte[]> RecordingAvailable;
 
-            SelectWave(wav);
+//        /// <summary>
+//        /// Stop recording and return the audio encoded bytes.
+//        /// </summary>
+//        /// <returns></returns>
+//        public async Task StopRecordingAsync()
+//        {
+//            if (recording)
+//            {
+//                await capture.StopRecordAsync();
+//                recording = false;
+//            }
+//            else
+//            {
+//                return;
+//            }
 
-        }
+//            byte[] wav = new byte[stream.Size];
+//            stream.Seek(0);
+//            await stream.ReadAsync(wav.AsBuffer(), (uint)stream.Size, InputStreamOptions.None);
 
-        public void SelectWave(byte[] wav)
-        {
-            // trim off the wav header
+//            SelectWave(wav);
 
-            // Get past all the other sub chunks to get to the data subchunk:
-            int pos = 12;   // First Subchunk ID from 12 to 16
+//        }
 
-            // Keep iterating until we find the data chunk (i.e. 64 61 74 61 ...... (i.e. 100 97 116 97 in decimal))
-            while (!(wav[pos] == 100 && wav[pos + 1] == 97 && wav[pos + 2] == 116 && wav[pos + 3] == 97))
-            {
-                pos += 4;
-                int chunkSize = wav[pos] + wav[pos + 1] * 256 + wav[pos + 2] * 65536 + wav[pos + 3] * 16777216;
-                pos += 4 + chunkSize;
-            }
-            pos += 8;
+//        public void SelectWave(byte[] wav)
+//        {
+//            // trim off the wav header
 
-            RiffHeader = new byte[pos];
-            Array.Copy(wav, 0, RiffHeader, 0, pos);
+//            // Get past all the other sub chunks to get to the data subchunk:
+//            int pos = 12;   // First Subchunk ID from 12 to 16
 
-            int len = wav.Length - pos;
-            byte[] data = new byte[len];
-            Array.Copy(wav, pos, data, 0, len);
+//            // Keep iterating until we find the data chunk (i.e. 64 61 74 61 ...... (i.e. 100 97 116 97 in decimal))
+//            while (!(wav[pos] == 100 && wav[pos + 1] == 97 && wav[pos + 2] == 116 && wav[pos + 3] == 97))
+//            {
+//                pos += 4;
+//                int chunkSize = wav[pos] + wav[pos + 1] * 256 + wav[pos + 2] * 65536 + wav[pos + 3] * 16777216;
+//                pos += 4 + chunkSize;
+//            }
+//            pos += 8;
 
-            if (RecordingAvailable != null)
-            {
-                RecordingAvailable(this, data);
-            }
+//            RiffHeader = new byte[pos];
+//            Array.Copy(wav, 0, RiffHeader, 0, pos);
 
-        }
+//            int len = wav.Length - pos;
+//            byte[] data = new byte[len];
+//            Array.Copy(wav, pos, data, 0, len);
 
-        public byte[] RiffHeader { get; set; }
+//            if (RecordingAvailable != null)
+//            {
+//                RecordingAvailable(this, data);
+//            }
 
-    }
-}
+//        }
+
+//        public byte[] RiffHeader { get; set; }
+
+//    }
+//}
