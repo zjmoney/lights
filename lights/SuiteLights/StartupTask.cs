@@ -121,6 +121,8 @@ namespace SuiteLights
             /////////////////////////////////////////////////////////////////////////////////////
 
             var media = new MediaCapture();
+
+            
             var captureInitSettings = new MediaCaptureInitializationSettings();
             captureInitSettings.StreamingCaptureMode = StreamingCaptureMode.Audio;
             media.InitializeAsync(captureInitSettings).GetResults();
@@ -202,6 +204,20 @@ namespace SuiteLights
             {
                 var resultsOfLoad = dataReader.LoadAsync((uint)stream.Size).GetResults();
 
+                var uncon = dataReader.UnconsumedBufferLength;
+
+
+                for(int i = 0; i < 1000; i++)
+                {
+                    WriteLine(dataReader.UnconsumedBufferLength);
+                }
+
+                
+
+                if (dataReader.UnconsumedBufferLength > 0)
+                {
+                    WriteLine("unconsumed");
+                }
                 var buff = dataReader.ReadBuffer(1);
 
                 while (dataReader.UnconsumedBufferLength > 0)
